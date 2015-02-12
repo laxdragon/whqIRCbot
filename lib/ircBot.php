@@ -183,8 +183,8 @@ class ircBot
             {
                 for ($i = 6; $i < (count($msg)+1); $i++)
                 {
-                    if (isset($msg[$i]))
-                        $this->onJoin($msg[4], trim(preg_replace('/^\@/', '', $msg[$i])));
+                    if (!empty($msg[$i]))
+                        $this->onJoin($msg[4], trim(preg_replace('/^(\@|\:)/', '', $msg[$i])));
                 }
                 continue;
             }
@@ -522,7 +522,7 @@ class ircBot
         if ($nick)
         {
             // update seen db
-            if (!isset($this->seen[$nick][$channel]['join']))
+            if (empty($this->seen[$nick][$channel]['join']))
                 $this->seen[$nick][$channel]['join'] = time();
             $this->seen[$nick][$channel]['last'] = time();
             $this->seen[$nick][$channel]['part'] = 0;
@@ -556,6 +556,8 @@ class ircBot
     {
         if ($channel == 'ALL')
         {
+            if (empty($this->seen[$nick]))
+                return;
             foreach ($this->seen[$nick] as $in_channel => $data)
             {
                 $this->seen[$nick][$in_channel]['part'] = time();
