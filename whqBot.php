@@ -55,7 +55,7 @@ $bot->start();
 
 // GIT log JSON parser
 // requires gitJSON script be setup on server with repository
-function whqGITlog ()
+function whqGITlog (&$irc)
 {
     // import RSS feed config
     global $gitJSON;
