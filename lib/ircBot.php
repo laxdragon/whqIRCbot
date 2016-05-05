@@ -280,17 +280,27 @@ class ircBot
         // connect
         echo "Connecting to: irc://{$this->config['server']}:{$this->config['port']}\n";
 
+        // set stream options
+        $options = array();
+        if (!empty($this->config['ssl']))
+        {
+            $options['ssl']['verify_peer'] = false;
+            $options['ssl']['verify_peer_name'] = false;
+        }
+
         // verify connection, loop until connected
         $c = 0;
         while (empty($this->socket))
         {
             // open socket
-            $this->socket = fsockopen($this->config['server'], $this->config['port']);
+            $this->socket = @stream_socket_client($this->config['server'].':'.$this->config['port'], $errno, $errstr, 15,
+                                                  STREAM_CLIENT_CONNECT, stream_context_create($options));
 
             // error out if no initial connection
             if (empty($this->socket))
             {
                 // on 5 failures, just give up
+                echo "ERROR:[{$errno}] {$errstr}\n";
                 if ($c == 5)
                 {
                     echo "Error! Unable to connect!\n";
@@ -301,6 +311,13 @@ class ircBot
 
             // count connection attempts
             $c++;
+        }
+
+        // enable TLS
+        if (!empty($this->config['ssl']))
+        {
+            echo "enabling SSL!\n";
+            stream_socket_enable_crypto($this->socket, true, STREAM_CRYPTO_METHOD_ANY_CLIENT);
         }
 
         // set socket stream to non blocking
