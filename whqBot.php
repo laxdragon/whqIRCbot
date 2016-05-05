@@ -18,6 +18,7 @@ $config = array(
                 // general
                 'server'    => 'irc.freenode.net',
                 'port'      => 6667,
+                'ssl'       => false,
                 'name'      => 'WineHQ Bot',
                 'nick'      => 'whqBot',
                 'pass'      => '',
