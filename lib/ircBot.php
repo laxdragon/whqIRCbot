@@ -345,6 +345,8 @@ class ircBot
      */
     private function login ()
     {
+        if (!empty($this->config['pass']))
+            $this->sendData('PASS', $this->config['pass']);
         $this->sendData('USER', $this->config['nick'].' codeweavers.com '.$this->config['nick'].' :'.$this->config['name']);
         $this->sendData('NICK', $this->config['nick']);
         $this->joinChannel($this->config['channel']);
