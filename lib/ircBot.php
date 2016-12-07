@@ -335,6 +335,7 @@ class ircBot
         if (!empty($this->socket))
             fclose($this->socket);
         $this->socket = null;
+        $this->channels = array();
         sleep(5);
     }
 
@@ -345,11 +346,17 @@ class ircBot
      */
     private function login ()
     {
+        // login
         if (!empty($this->config['pass']))
             $this->sendData('PASS', $this->config['pass']);
         $this->sendData('USER', $this->config['nick'].' codeweavers.com '.$this->config['nick'].' :'.$this->config['name']);
         $this->sendData('NICK', $this->config['nick']);
+
+        // join channel (need a small wait before joining on some servers)
+        sleep(2);
         $this->joinChannel($this->config['channel']);
+
+        // start log
         $this->log("<b>Started: ".date('Y-m-d h:i:s')."</b><hr>");
         return true;
     }
