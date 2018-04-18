@@ -1,9 +1,9 @@
 <?php
 /*
- * =====================================================================================================================
+ * ==========================================================================================================
  * WineHQ IRC Bot
  *  by Jeremy Newman <jnewman@codeweavers.com>
- * =====================================================================================================================
+ * ==========================================================================================================
  */
 
 // exit out if attempting to run as web script
@@ -16,19 +16,19 @@ $path = realpath(dirname(__FILE__));
 // bot Config
 $config = array(
                 // general
-                'server'    => 'irc.freenode.net',
-                'port'      => 6667,
-                'ssl'       => false,
+                'server'    => 'chat.freenode.net',
+                'port'      => 6697,
+                'ssl'       => true,
                 'name'      => 'WineHQ Bot',
                 'nick'      => 'whqBot',
                 'pass'      => '',
-                'channel'   => '#winehackers',
+                'channels'  => array("#winehackers"),
 
                 // admin user
                 'admin'     => array('laxdragon'),
 
                 // enable log
-                'logging'   => false,
+                'logging'   => true,
                 'log_path'  => "{$path}/log/",
 
                 // insult DB
@@ -44,19 +44,21 @@ $gitJSON = array(
                            )
                 );
 
-// load modules and defines
+// init bot
 require_once("{$path}/lib/ircBot.php");
-
-//Start the bot
 $bot = new ircBot($config);
-$bot->addTimer("whqGITlog", 300, "whqGITlog");
-$bot->addParser('/[a-f0-9]{8,}/i', "whqGITcommit");
-//$bot->addParser('/bug ([0-9]+)/i', "WHQgetBug");
+
+// timers and parsers
+$bot->addTimer("#winehackers", "whqGITlog", 300, "whqGITlog");
+$bot->addParser("#winehackers", '/[a-f0-9]{8,}/i', "whqGITcommit");
+$bot->addParser("#winehackers", '/bug ([0-9]+)/i', "WHQgetBug");
+
+// start bot (main loop)
 $bot->start();
 
-// GIT log JSON parser
+// GIT log timer
 // requires gitJSON script be setup on server with repository
-function whqGITlog (&$irc)
+function whqGITlog (&$irc, $channel)
 {
     // import RSS feed config
     global $gitJSON;
@@ -79,7 +81,7 @@ function whqGITlog (&$irc)
                 if ($FEED['date'] > 0 and $date > $FEED['date'])
                 {
                     $sha = substr(preg_replace('/^.*\/([0-9a-z]+)$/', '$1', $sha), 0, 9);
-                    $irc->say($irc->config['channel'],
+                    $irc->say($channel,
                               $irc->color('grey',"[{$FEED['code']}]")." ".
                               $irc->color('cyan',$author)." * ".
                               $irc->color('red',$sha)." : ".
