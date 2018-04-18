@@ -28,7 +28,7 @@ $config = array(
                 'admin'     => array('laxdragon'),
 
                 // enable log
-                'logging'   => true,
+                'logging'   => false,
                 'log_path'  => "{$path}/log/",
 
                 // insult DB
