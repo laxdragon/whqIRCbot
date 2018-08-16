@@ -169,7 +169,18 @@ class ircBot
             // ping-pong with the server to stay connected
             if ($msg[0] == 'PING')
             {
+                // reply
                 $this->sendData('PONG', $msg[0]);
+
+                // join channels
+                // FIXME -- this causes a large delay before joining the channel
+                // but it was the best way to fix FreeNode as the nickServ needs
+                // to register fist.
+                foreach ($this->config['channels'] as $chan)
+                {
+                    if (empty($this->channels[$chan]['join']))
+                        $this->joinChannel($chan);
+                }
                 continue;
             }
 
@@ -352,14 +363,11 @@ class ircBot
             $this->sendData('PASS', $this->config['pass']);
         $this->sendData('USER', $this->config['nick'].' codeweavers.com '.$this->config['nick'].' :'.$this->config['name']);
         $this->sendData('NICK', $this->config['nick']);
-
-        // join channels
-        foreach ($this->config['channels'] as $chan)
+        // register with nickServ
+        if (!empty($this->config['nickserv']))
         {
-            $this->joinChannel($chan);
+            $this->say('nickserv', "identify {$this->config['nick']} {$this->config['nickserv']}");
         }
-
-        // done
         return true;
     }
 
@@ -370,9 +378,6 @@ class ircBot
      */
     private function joinChannel ($channel)
     {
-        // need a small wait before joining on some servers
-        sleep(2);
-
         // start log
         $this->log($channel, "<b>Started: ".date('Y-m-d h:i:s')."</b><hr>");
 

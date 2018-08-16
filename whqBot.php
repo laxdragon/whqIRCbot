@@ -22,7 +22,8 @@ $config = array(
                 'name'      => 'WineHQ Bot',
                 'nick'      => 'whqBot',
                 'pass'      => '',
-                'channels'  => array("#winehackers"),
+		'channels'  => array("#winehackers"),
+		'nickserv'  => '',
 
                 // admin user
                 'admin'     => array('laxdragon'),
