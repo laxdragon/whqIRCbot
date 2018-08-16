@@ -3,6 +3,7 @@
  * =========================================================================================================
  * ircBot Class
  *  by Jeremy Newman <jnewman@codeweavers.com>
+ *  https://github.com/laxdragon/whqIRCbot
  * =========================================================================================================
  */
 class ircBot
@@ -707,7 +708,7 @@ class ircBot
             switch ($command)
             {
                 case 'help':
-                    $this->say($channel, "available commands: (help,insult,page,seen,status,uptime)");
+                    $this->say($channel, "available commands: (help,insult,page,seen,status,uptime,ver)");
                     break;
 
                 case 'insult':
@@ -819,7 +820,8 @@ class ircBot
                 case 'status':
                     $this->say($channel, $this->color('grey',"==========================================================="));
                     $this->say($channel, " {$this->color('red','ircBot')} by Jeremy Newman <{$this->color('blue','jnewman@codeweavers.com')}>");
-                    $this->say($channel, "   version: {$this->color('teal',$this->version)}");
+                    $this->say($channel, "    version: {$this->color('teal',$this->version)}");
+                    $this->say($channel, "    https://github.com/laxdragon/whqIRCbot");
                     $this->say($channel, " {$this->color('green','All Systems Operational!')}");
                     $this->say($channel, " Online Since: {$this->color('lime')}".date("Y-m-d h:i:s", $this->starttime)."{$this->color()}");
                     $this->say($channel, $this->color('grey',"==========================================================="));

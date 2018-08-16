@@ -3,6 +3,7 @@
  * ==========================================================================================================
  * WineHQ IRC Bot
  *  by Jeremy Newman <jnewman@codeweavers.com>
+ *  https://github.com/laxdragon/whqIRCbot
  * ==========================================================================================================
  */
 
@@ -22,8 +23,8 @@ $config = array(
                 'name'      => 'WineHQ Bot',
                 'nick'      => 'whqBot',
                 'pass'      => '',
-		'channels'  => array("#winehackers"),
-		'nickserv'  => '',
+                'channels'  => array("#winehackers"),
+                'nickserv'  => '',
 
                 // admin user
                 'admin'     => array('laxdragon'),
