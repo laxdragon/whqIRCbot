@@ -158,13 +158,11 @@ class ircBot
                 $timer = microtime(true);
             }
 
-            // get message data from server
-            $data = fgets($this->socket, 256);
-            $msg = explode(' ', trim($data));
-            flush();
+            // get data from server
+            $msg = $this->getData();
 
             // continue if there was no command
-            if (!isset($msg[0]))
+            if (empty($msg[0]))
                 continue;
 
             // ping-pong with the server to stay connected
@@ -172,26 +170,12 @@ class ircBot
             {
                 // reply
                 $this->sendData('PONG', $msg[0]);
-
-                // join channels
-                // FIXME -- this causes a large delay before joining the channel
-                // but it was the best way to fix FreeNode as the nickServ needs
-                // to register fist.
-                foreach ($this->config['channels'] as $chan)
-                {
-                    if (empty($this->channels[$chan]['join']))
-                        $this->joinChannel($chan);
-                }
                 continue;
             }
 
             // continue if there was no further data
-            if (!isset($msg[1]))
+            if (empty($msg[1]))
                 continue;
-
-            // output data from server to console
-            echo "{$data}";
-            //print_r($msg); // debug
 
             // names list
             if ($msg[1] == '353')
@@ -359,15 +343,79 @@ class ircBot
      */
     private function login ()
     {
-        // login
+        // init sasl login
+        if (!empty($this->config['sasl']))
+        {
+            echo "enabling SASL!\n";
+            $this->sendData('CAP', 'REQ :sasl');
+        }
+
+        // send user info
+        $this->sendData('NICK', $this->config['nick']);
+        $this->sendData('USER', $this->config['nick'].' 0 0 :'.$this->config['name']);
         if (!empty($this->config['pass']))
             $this->sendData('PASS', $this->config['pass']);
-        $this->sendData('USER', $this->config['nick'].' codeweavers.com '.$this->config['nick'].' :'.$this->config['name']);
-        $this->sendData('NICK', $this->config['nick']);
+
+        // login loop
+        while (true)
+        {
+            // sleep 100ms to prevent high CPU usage
+            usleep(100000);
+
+            // get data from server
+            $msg = $this->getData();
+
+            // continue if there was no command
+            if (empty($msg[0]))
+                continue;
+
+            // SASL password
+            if ($msg[0] == 'AUTHENTICATE' and $msg[1] == '+')
+            {
+                $this->sendData('AUTHENTICATE', base64_encode($this->config['nick']."\x00".$this->config['nick']."\x00".$this->config['sasl']));
+                continue;
+            }
+
+            // login message handler
+            switch ($msg[1])
+            {
+                // SASL handler
+                case 'CAP':
+                    if ($msg[3] == 'ACK')
+                        $this->sendData('AUTHENTICATE', 'PLAIN');
+                    break;
+
+                // SASL successful
+                case '903':
+                    $this->sendData('CAP', 'END');
+                    break;
+
+                // SASL login failed!
+                case '904':
+                    echo "SASL login failed!\n";
+                    exit();
+
+                // login complete, break out of login loop
+                case '001':
+                    break 2;
+            }
+        }
+
         // register with nickServ
         if (!empty($this->config['nickserv']))
         {
-            $this->say('nickserv', "identify {$this->config['nick']} {$this->config['nickserv']}");
+            sleep(1);
+            $this->sendData('PRIVMSG', "nickserv :identify {$this->config['nick']} {$this->config['nickserv']}");
+        }
+
+        // join channels
+        foreach ($this->config['channels'] as $chan)
+        {
+            if (empty($this->channels[$chan]['join']))
+            {
+                sleep(2);
+                $this->joinChannel($chan);
+            }
         }
         return true;
     }
@@ -478,6 +526,34 @@ class ircBot
             }
             flush();
         }
+    }
+
+    /*
+     * =====================================================================================================
+     * get messages from server
+     * =====================================================================================================
+     */
+    private function getData ($sleep = false)
+    {
+        // sleep before sending
+        if ($sleep)
+            usleep(100000);
+
+        // get message data from server
+        $data = fgets($this->socket, 256);
+        $msg = explode(' ', trim($data));
+        flush();
+
+        // continue if there was no command
+        if (empty($msg[0]))
+            return $msg;
+
+        // output data from server to console
+        echo "{$data}";
+        //print_r($msg); // debug
+
+        // return data
+        return $msg;
     }
 
     /*

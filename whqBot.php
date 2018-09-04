@@ -17,7 +17,7 @@ $path = realpath(dirname(__FILE__));
 // bot Config
 $config = array(
                 // general
-                'server'    => 'chat.freenode.net',
+                'server'    => 'irc.freenode.net',
                 'port'      => 6697,
                 'ssl'       => true,
                 'name'      => 'WineHQ Bot',
@@ -25,6 +25,7 @@ $config = array(
                 'pass'      => '',
                 'channels'  => array("#winehackers"),
                 'nickserv'  => '',
+                'sasl'      => '',
 
                 // admin user
                 'admin'     => array('laxdragon'),
@@ -41,7 +42,7 @@ $config = array(
 $gitJSON = array(
                  0 => array(
                             'code' => 'wine',
-                            'url'  => 'http://wine.codeweavers.com/gitJSON.php',
+                            'url'  => 'https://wine.codeweavers.com/gitJSON.php',
                             'date' => 0
                            )
                 );
@@ -100,7 +101,7 @@ function whqGITcommit (&$irc, $id = array())
 {
     if (empty($id[0]))
         return "";
-    $gitURL  = "http://source.winehq.org/git/";
+    $gitURL  = "https://source.winehq.org/git/";
     $repos = array("wine.git");
     $r = array();
     foreach ($repos as $repo)
@@ -132,7 +133,7 @@ function WHQgetBug (&$irc, $id = array())
     $b = json_decode(file_get_contents("https://www.winehq.org/~wineowner/bug_json.php?bug_id={$bug}"));
     if (empty($b) or empty($b->bug_id))
         return "";
-    $url = 'http://bugs.winehq.org/show_bug.cgi?id=';
+    $url = 'https://bugs.winehq.org/show_bug.cgi?id=';
     $r = (!empty($b->resolution) ? " {$b->resolution}" : "");
     $status = array('UNCONFIRMED'=>'teal','NEW'=>'green','ASSIGNED'=>'lime','CLOSED'=>'red','RESOLVED'=>'orange','REOPENED'=>'purple');
     return "winehq bug:[".$irc->color('cyan',$b->bug_id)."] ".$irc->color('bold',$b->short_desc)." - ".
