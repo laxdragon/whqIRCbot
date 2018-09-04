@@ -42,7 +42,7 @@ $config = array(
 $gitJSON = array(
                  0 => array(
                             'code' => 'wine',
-                            'url'  => 'https://wine.codeweavers.com/gitJSON.php',
+                            'url'  => 'https://www.winehq.org/~wineowner/gitJSON.php',
                             'date' => 0
                            )
                 );
