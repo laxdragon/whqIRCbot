@@ -369,17 +369,19 @@ class ircBot
             if (empty($msg[0]))
                 continue;
 
-            // SASL password
+            // SASL password (null byte seperated base64 encoded)
             if ($msg[0] == 'AUTHENTICATE' and $msg[1] == '+')
             {
-                $this->sendData('AUTHENTICATE', base64_encode($this->config['nick']."\x00".$this->config['nick']."\x00".$this->config['sasl']));
+                $spass = $this->config['nick']."\x00".$this->config['nick']."\x00".$this->config['sasl'];
+                $this->sendData('AUTHENTICATE', base64_encode($spass));
+                unset($spass);
                 continue;
             }
 
             // login message handler
             switch ($msg[1])
             {
-                // SASL handler
+                // SASL set authenticate mode
                 case 'CAP':
                     if ($msg[3] == 'ACK')
                         $this->sendData('AUTHENTICATE', 'PLAIN');
@@ -395,7 +397,7 @@ class ircBot
                     echo "SASL login failed!\n";
                     exit();
 
-                // login complete, break out of login loop
+                // login complete, break out of login loop during MOTD
                 case '001':
                     break 2;
             }
@@ -411,13 +413,9 @@ class ircBot
         // join channels
         foreach ($this->config['channels'] as $chan)
         {
-            if (empty($this->channels[$chan]['join']))
-            {
-                sleep(2);
-                $this->joinChannel($chan);
-            }
+            sleep(2);
+            $this->joinChannel($chan);
         }
-        return true;
     }
 
     /*
@@ -428,25 +426,11 @@ class ircBot
     private function joinChannel ($channel)
     {
         // start log
-        $this->log($channel, "<b>Started: ".date('Y-m-d h:i:s')."</b><hr>");
+        $this->log($channel, "<b>Started {$channel}: ".date('Y-m-d h:i:s')."</b><hr>");
 
         // join
-        if (is_array($channel))
-        {
-            // multiple channels at once
-            foreach ($channel as $chan)
-            {
-                $this->sendData('JOIN', $chan);
-                $this->channels[$chan] = array('join' => time(), 'topic' => '');
-            }
-        }
-        else
-        {
-            // single channel
-            $this->sendData('JOIN', $channel);
-            $this->channels[$channel] = array('join' => time(), 'topic' => '');
-        }
-        return true;
+        $this->sendData('JOIN', $channel);
+        $this->channels[$channel] = array('join' => time(), 'topic' => '');
     }
 
     /*
@@ -533,12 +517,8 @@ class ircBot
      * get messages from server
      * =====================================================================================================
      */
-    private function getData ($sleep = false)
+    private function getData ()
     {
-        // sleep before sending
-        if ($sleep)
-            usleep(100000);
-
         // get message data from server
         $data = fgets($this->socket, 256);
         $msg = explode(' ', trim($data));
@@ -546,7 +526,7 @@ class ircBot
 
         // continue if there was no command
         if (empty($msg[0]))
-            return $msg;
+            return array();
 
         // output data from server to console
         echo "{$data}";
