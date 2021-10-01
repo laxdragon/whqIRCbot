@@ -39,7 +39,7 @@ class ircBot
     private $queue = array();
 
     // ircBot Version
-    private $version = '3.5';
+    private $version = '3.5.1';
 
     /*
      * =====================================================================================================
@@ -50,6 +50,19 @@ class ircBot
     {
         // copy config
         $this->config = $config;
+
+        // load insult DB
+        if (file_exists($this->config['insults']))
+        {
+            $fd = @fopen($this->config['insults'], "r");
+            while (!feof ($fd))
+            {
+                $this->insults[] = trim(fgets($fd, 4096));
+            }
+            fclose($fd);
+            if (count($this->insults))
+                echo "-- insult db: loaded (".count($this->insults).") insults\n";
+        }
     }
 
     /*
@@ -96,19 +109,6 @@ class ircBot
 
         // open socket to IRC server
         $this->connect();
-
-        // load insult DB
-        if (file_exists($this->config['insults']))
-        {
-            $fd = @fopen($this->config['insults'], "r");
-            while (!feof ($fd))
-            {
-                $this->insults[] = trim(fgets($fd, 4096));
-            }
-            fclose($fd);
-            if (count($this->insults))
-                echo " -- insult db: loaded (".count($this->insults).") insults\n";
-        }
 
         // login
         $this->login();
@@ -232,7 +232,9 @@ class ircBot
                 if ($this->getNick($msg[0]) == $this->config['nick'])
                 {
                     // we lost connection attempt to reconnect
+                    echo "-- QUIT... reconnecting...\n";
                     $this->disconnect();
+                    sleep(10);
                     $this->connect();
                     $this->login();
                 }
@@ -256,6 +258,16 @@ class ircBot
             {
                 $this->updateSeen($this->unsep($msg[2]), $this->getNick($msg[0]));
                 $this->onPrivMsg($msg);
+            }
+
+            // connection error
+            if ($msg[1] == 'ERROR' or $msg[1] == 'ERROR:[110]')
+            {
+                echo "-- {$msg[1]}... reconnecting...\n";
+                $this->disconnect();
+                sleep(10);
+                $this->connect();
+                $this->login();
             }
         }
         // end main loop
